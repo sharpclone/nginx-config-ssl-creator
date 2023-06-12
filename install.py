@@ -1,4 +1,11 @@
-import os, subprocess, pathlib
+import os, subprocess, pathlib, configparser
+
+def config_get(key :str):
+    #Setting up the config file
+    settings = configparser.ConfigParser()
+    settings.read("creator.conf")
+    cfg = settings["Settings"]
+    return cfg[key].strip("\"' ")
 
 def write_to_root_file(content, file_path):
     # Create a temporary file to hold the content
@@ -24,14 +31,13 @@ settings.read("creator.conf")
 cfg = settings["Settings"]
 
 prefix="/etc/nginx-proxy-creator/"
-subprocess.run(cfg["root_method"],'mkdir',prefix)
-subprocess.run(cfg["root_method"],'mkdir',f'{prefix}templates')
-
+subprocess.run([config_get("root_method"),'mkdir','-p',f'{prefix}templates'])
 write_to_root_file(open("nginx_create_proxy.py").read(), f'{prefix}run.py')
-write_to_root_file(open("creator.conf"), f"{prefix}creator.conf")
-write_to_root_file(open("return301.conf"), f"{prefix}return301.conf")
-write_to_root_file(open("acme_challenge"), f"{prefix}acme_challenge")
+write_to_root_file(open("creator.conf").read(), f"{prefix}creator.conf")
+write_to_root_file(open("return301.conf").read(), f"{prefix}return301.conf")
+write_to_root_file(open("acme_challenge").read(), f"{prefix}acme_challenge")
+
 
 entries = pathlib.Path("templates")
 for entry in entries.iterdir():
-    write_to_root_file(open(entry).read(),prefix+entry)
+    write_to_root_file(open(entry).read(),prefix+"templates/"+entry.name)

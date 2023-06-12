@@ -31,7 +31,7 @@ def find_variables(config_string : str):
 def config_get(key :str):
     #Setting up the config file
     settings = configparser.ConfigParser()
-    settings.read("/home/mihu/Documents/Workspace/Py/nginx_proxy_creator/creator.conf")
+    settings.read("/etc/nginx-proxy-creator/creator.conf")
     cfg = settings["Settings"]
     return cfg[key].strip("\"' ")
 
@@ -95,13 +95,15 @@ def choose_template(folder):
 
 if __name__ == "__main__":
     #Selecting the template
-    template = choose_template(Path(config_get("template_folder")))
+    template = choose_template(Path("/etc/nginx-proxy-creator/templates"))
 
     #Open the template
     template = open(template,"r").read()
     # config_string = conf.read()
     mod_cfg,variables = modify_variables(template)
     conf_path = config_get("nginx_conf_path") + variables["domain"] + ".conf"
+
+    #Getting the auto ssl
     want_ssl = input("Do you want to get the ssl-cert automatically? [y/N]: ") or 'n'
     if want_ssl.lower() != 'n':
         ssl_method = config_get("ssl_method")
@@ -111,7 +113,9 @@ if __name__ == "__main__":
             exit()
         else:
             print("Note that you should use a SSL template (that have #@ comments)")
-            write_to_root_file(mod_cfg, conf_path)
+            #Do the ssl -stuff here
+        
+    else:
+        #Final result       
+        write_to_root_file(mod_cfg, conf_path)
 
-    #Final result
-    print(mod_cfg)
