@@ -101,6 +101,7 @@ if __name__ == "__main__":
     template = open(template,"r").read()
     # config_string = conf.read()
     mod_cfg,variables = modify_variables(template)
+    conf_path = config_get("nginx_conf_path") + variables["domain"] + ".conf"
     want_ssl = input("Do you want to get the ssl-cert automatically? [y/N]: ") or 'n'
     if want_ssl.lower() != 'n':
         ssl_method = config_get("ssl_method")
@@ -110,8 +111,7 @@ if __name__ == "__main__":
             exit()
         else:
             print("Note that you should use a SSL template (that have #@ comments)")
-            conf_path = config_get("nginx_conf_path") + variables["domain"] + ".conf"
-            write_to_root_file(mod_cfg, file_path)
+            write_to_root_file(mod_cfg, conf_path)
 
     #Final result
     print(mod_cfg)
