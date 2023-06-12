@@ -1,6 +1,20 @@
 import re
 import configparser
 from pathlib import Path
+import subprocess
+
+def write_to_root_file(content, file_path):
+    # Create a temporary file to hold the content
+    temp_file = '/tmp/tempfile.txt'
+    with open(temp_file, 'w') as f:
+        f.write(content)
+    root_method = config_get("root_method")
+    # Use subprocess to execute the write operation with sudo
+    subprocess.run([root_method, 'cp', temp_file, file_path])
+
+    # Remove the temporary file
+    subprocess.run([root_method, 'rm', temp_file])
+
 
 def find_variables(config_string : str):
     variables = re.findall(r'@([a-zA-Z_]\w+)(?!\w|\s*\()', config_string)
@@ -20,6 +34,7 @@ def modify_variables(config_string : str):
   #Find the variables
     variables = find_variables(config_string)
     print(f"Found variables: {variables}")
+    variable_dict = dict()
     for var in variables:
 
         #Allow table specific
@@ -36,12 +51,14 @@ def modify_variables(config_string : str):
                 for ip in ips:
                     table += f"\tallow {ip};\n"
             final_cfg = final_cfg.replace(f"@allow_table", table)
+            variable_dict[var] = table
 
         #Other simple variables
         else:
             val = input(f"Give the value of {var}: ")
+            variable_dict[var] = val
             final_cfg = final_cfg.replace(f"@{var}", val)
-    return final_cfg
+    return final_cfg,variable_dict
 
 def choose_template(folder):
     #Listing AvailableTemplates
@@ -71,8 +88,13 @@ def choose_template(folder):
 
 
 if __name__ == "__main__":
+    #Selecting the template
+    template = choose_template(Path(config_get("template_folder")))
 
-
+    #Open the template
+    template = open(template,"r").read()
+    # config_string = conf.read()
+    mod_cfg,variables = modify_variables(template)
     want_ssl = input("Do you want to get the ssl-cert automatically? [y/N]: ") or 'n'
     if want_ssl.lower() != 'n':
         ssl_method = config_get("ssl_method")
@@ -81,14 +103,9 @@ if __name__ == "__main__":
             print(f"You should install {ssl_method} and then run this script again")
             exit()
         else:
-            pass
+            print("Note that you should use a SSL template (that have #@ comments)")
+            conf_path = config_get("nginx_conf_path") + variables["domain"] + ".conf"
+            write_to_root_file(mod_cfg, file_path)
 
-    #Selecting the template
-    template = choose_template(Path(config_get("template_folder")))
-
-    #Open the template
-    template = open(template,"r").read()
-    # config_string = conf.read()
-    mod_cfg = modify_variables(template)
     #Final result
     print(mod_cfg)

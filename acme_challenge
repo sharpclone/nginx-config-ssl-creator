@@ -1,0 +1,4 @@
+location /.well-known/acme-challenge/ {
+        rewrite ^/.well-known/acme-challenge/(.*) /$1 break;
+        root @acme;
+} 
