@@ -36,11 +36,13 @@ subprocess.run([su,'mkdir','-p',f'{prefix}templates'])
 
 entries = pathlib.Path(".")
 for entry in entries.iterdir():
-    if not entry.is_dir and entry.name != "README.md":
+    print(entry)
+    if not entry.is_dir() and entry.name != "README.md":
         write_to_root_file(open(entry).read(), f"{prefix}{entry.name}")
 
 
 
 entries = pathlib.Path("templates")
 for entry in entries.iterdir():
+    print(entry)
     write_to_root_file(open(entry).read(),prefix+"templates/"+entry.name)
