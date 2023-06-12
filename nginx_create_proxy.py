@@ -2,19 +2,25 @@ import re
 import configparser
 from pathlib import Path
 import subprocess
+import os
 
 def write_to_root_file(content, file_path):
     # Create a temporary file to hold the content
     temp_file = '/tmp/tempfile.txt'
     with open(temp_file, 'w') as f:
         f.write(content)
+
     root_method = config_get("root_method")
-    # Use subprocess to execute the write operation with sudo
+
+    # Check if the file already exists and delete it if it does
+    if os.path.exists(file_path):
+        subprocess.run([root_method, 'rm', file_path])
+
+    # Use subprocess to execute the write operation with the appropriate root method
     subprocess.run([root_method, 'cp', temp_file, file_path])
 
     # Remove the temporary file
     subprocess.run([root_method, 'rm', temp_file])
-
 
 def find_variables(config_string : str):
     variables = re.findall(r'@([a-zA-Z_]\w+)(?!\w|\s*\()', config_string)
