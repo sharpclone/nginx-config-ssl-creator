@@ -38,7 +38,7 @@ write_to_root_file(open("creator.conf").read(), f"{prefix}creator.conf")
 write_to_root_file(open("return301.conf").read(), f"{prefix}return301.conf")
 write_to_root_file(open("acme_challenge").read(), f"{prefix}acme_challenge")
 write_to_root_file(open("nginx-proxy-creator").read(), f"{prefix}nginx-proxy-creator")
-subprocess.run(["chmox",'+x','nginx-proxy-creator'])
+subprocess.run(["chmod",'+x','nginx-proxy-creator'])
 subprocess.run([su,"ln","-s", prefix+"nginx-proxy-creator","/usr/bin/"])
 
 
