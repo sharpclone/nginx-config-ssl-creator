@@ -31,12 +31,14 @@ settings.read("creator.conf")
 cfg = settings["Settings"]
 
 prefix="/etc/nginx-proxy-creator/"
-subprocess.run([config_get("root_method"),'mkdir','-p',f'{prefix}templates'])
-write_to_root_file(open("nginx_create_proxy.py").read(), f'{prefix}run.py')
+su = config_get("root_method")
+subprocess.run([su,'mkdir','-p',f'{prefix}templates'])
+write_to_root_file(open("nginx_create_proxy.py").read(), f'{prefix}nginx-proxy-creator.py')
 write_to_root_file(open("creator.conf").read(), f"{prefix}creator.conf")
 write_to_root_file(open("return301.conf").read(), f"{prefix}return301.conf")
 write_to_root_file(open("acme_challenge").read(), f"{prefix}acme_challenge")
-
+subprocess.run([su,"ln -s", prefix+"nginx-proxy-creator.py"," ","/usr/bin/"])
+subprocess.run(["source /etc/profile"])
 
 entries = pathlib.Path("templates")
 for entry in entries.iterdir():
