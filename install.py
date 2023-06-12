@@ -37,8 +37,8 @@ write_to_root_file(open("nginx_create_proxy.py").read(), f'{prefix}nginx-proxy-c
 write_to_root_file(open("creator.conf").read(), f"{prefix}creator.conf")
 write_to_root_file(open("return301.conf").read(), f"{prefix}return301.conf")
 write_to_root_file(open("acme_challenge").read(), f"{prefix}acme_challenge")
-subprocess.run([su,"ln"," -s", prefix+"nginx-proxy-creator.py"," ","/usr/bin/"])
-subprocess.run(["source"," /etc/profile"])
+subprocess.run([su,"ln","-s", prefix+"nginx-proxy-creator.py","/usr/bin/"])
+subprocess.run(["source","/etc/profile"])
 
 entries = pathlib.Path("templates")
 for entry in entries.iterdir():
