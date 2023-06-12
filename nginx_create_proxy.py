@@ -72,6 +72,17 @@ def choose_template(folder):
 
 if __name__ == "__main__":
 
+
+    want_ssl = input("Do you want to get the ssl-cert automatically? [y/N]: ") or 'n'
+    if want_ssl.lower() != 'n':
+        ssl_method = config_get("ssl_method")
+        has_installed_ssl_method = input(f"Have you installed {ssl_method}? [y/N]: ") or 'n'
+        if has_installed_ssl_method.lower() == 'n':
+            print(f"You should install {ssl_method} and then run this script again")
+            exit()
+        else:
+            pass
+
     #Selecting the template
     template = choose_template(Path(config_get("template_folder")))
 
@@ -79,7 +90,5 @@ if __name__ == "__main__":
     template = open(template,"r").read()
     # config_string = conf.read()
     mod_cfg = modify_variables(template)
-  
-
     #Final result
     print(mod_cfg)
