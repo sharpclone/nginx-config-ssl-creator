@@ -180,7 +180,7 @@ def get_ssl(config, variables):
 
     config =  config.replace("#%", "")
     config =  config.replace("listen 80;", "listen 443 ssl http2;")
-    certificates =  f"ssl_certificate {cert_path};\nssl_certificate_key {key_path};\n"
+    certificates =  f"ssl_certificate {cert_path.replace('@domain', domain)};\nssl_certificate_key {key_path.replace('@domain', domain)};\n"
     config =  config.replace("@ssl", certificates)
 
 
