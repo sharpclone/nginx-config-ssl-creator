@@ -173,10 +173,18 @@ def get_ssl(config, variables):
         key_path = input("Please input the template for your key path (it will update the config)")
         config_set("ssl_cert_key_path", key_path)
 
-    config = config.replace("#%", "")
+    config =  config.replace("#%", "")
     config =  config.replace("listen 80;", "listen 443 ssl http2;")
     config =  certificates =  f"ssl_certificate {cert_path};\nssl_certificate_key {key_path};\n"
     config =  config.replace("@ssl", certificates)
+
+
+    return301 = open("/etc/nginx_proxy_creator/return301.conf")\
+        .read()\
+        .replace("@domain", domain)
+    
+    config = config + '\n' + return301;
+
     write_to_root_file(config, variables["config_path"])
     restart_nginx()
 
