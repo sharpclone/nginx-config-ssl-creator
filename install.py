@@ -35,8 +35,9 @@ su = config_get("root_method")
 subprocess.run([su,'mkdir','-p',f'{prefix}templates'])
 
 entries = pathlib.Path(".")
+skip_files = ['README.md','install.py']
 for entry in entries.iterdir():
-    if not entry.is_dir() and entry.name != "README.md":
+    if not entry.is_dir() and entry.name not in skip_files:
         print(entry)
         write_to_root_file(open(entry).read(), f"{prefix}{entry.name}")
 

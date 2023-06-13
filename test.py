@@ -12,5 +12,17 @@ def config_get(key :str):
     cfg = settings["Settings"]
     return cfg[key].strip("\"' ")
 
+
+def config_set(key, value):
+    config = configparser.ConfigParser()
+    config.read("/home/mihu/Documents/Workspace/Py/nginx_proxy_creator/creator.conf")
+    parser = config['Settings']
+    parser[key] = value
+    with open('/tmp/cfg.temp','w+') as cfg:
+        config.write(cfg)
+        cfg.close()
+    f = open("/tmp/cfg.temp").read()
+    print(f)
+
 if __name__ == "__main__":
-    restart_nginx()
+    config_set("acme_root","/var/www/html/acme")

@@ -8,18 +8,23 @@ import os
 def config_get(key :str):
     #Setting up the config file
     settings = configparser.ConfigParser()
-    settings.read("/etc/nginx_proxy_creator/creator.conf")
+    settings.read("/etc/nginx-proxy-creator/creator.conf")
     cfg = settings["Settings"]
     return cfg[key].strip("\"' ")
 
 
 def config_set(key, value):
-    config = ConfigParser()
-    config.read("/etc/nginx_proxy_creator/creator.conf")
+    config = configparser.ConfigParser()
+    config.read("/etc/nginx-proxy-creator/creator.conf")
     parser = config['Settings']
     parser[key] = value
-    with open('/etc/nginx_proxy_creator/creator.conf', 'w') as configfile:
-        config.write(configfile)
+
+    with open('/tmp/cfg.temp','w+') as cfg:
+        config.write(cfg)
+        cfg.close()
+    tmpcfg = open('/tmp/cfg.temp').read()
+    write_to_root_file(tmpcfg, "/etc/nginx-proxy-creator/creator.conf")
+
 
 
 def write_to_root_file(content, file_path):
@@ -60,11 +65,11 @@ def modify_variables(config_string : str):
     print(f"Found variables: {variables}")
     variable_dict = dict()
     for var in variables:
-
+        special_vars = ['allow_table','ssl','acme_challenge']
         #Allow table specific
         if var == "allow_table":
             table = ""
-            useDef = input(f"Do you want to use {config_get('allow_table')} for the allowed IPs that are allowed to access the location? [Y/n] " ).lower() or 'Y'
+            useDef = input(f"Do you want to use {config_get('allow_table')} for the allowed IPs that are allowed to access the location? [Y/n] " ).lower() or 'y'
             if useDef == 'n':
                 val = input(f"Give the allowed CIDR noted IPs (separated by comma) that are allowed to access the location :")
                 val = val.split(",")
@@ -81,19 +86,19 @@ def modify_variables(config_string : str):
             pass
 
         #acme
-        if var == "acme":
-            acme_config = open("/etc/nginx_proxy_creator/acme_challenge").read()
-            acme_path = config_get("acme_root")
-            is_ok = input(f"Is {acme_path} the correct path for the acme? [Y/n]").lower() or 'y'
+        if var == "acme_challenge":
+            acme_challenge = open("/etc/nginx-proxy-creator/acme_challenge").read()
+            acme_root = config_get("acme_root")
+            is_ok = input(f"Is {acme_root} the correct path for the acme root ? [Y/n]: ").lower() or 'y'
             if is_ok == 'n':
-                print("You can change the acme root from the config")
-                exit()
-            acme_config = acme_config.replace("@acme", acme_path)
-            final_cfg = final_cfg.replace("@acme", acme_config)
-            variable_dict[var] = acme_config 
+                acme_root = input("Input the correct path for the acme root (it will change the config): ")
+                config_set("acme_root", acme_root)
+            acme_challenge = acme_challenge.replace("@acme_root", acme_root)
+            final_cfg = final_cfg.replace("@acme_challenge", acme_challenge)
+        
 
         #Other simple variables
-        else:
+        elif var not in special_vars:
             val = input(f"Give the value of {var}: ")
             variable_dict[var] = val
             final_cfg = final_cfg.replace(f"@{var}", val)
@@ -148,7 +153,7 @@ def get_ssl(config, variables):
     domain = variables["domain"]
 
     if ssl_method == 'certbot':
-        webroot_path = input("Please enter the webroot path for certbot")
+        webroot_path = input("Please enter the webroot path for certbot: ")
         subprocess.run(f"{su} certbot certonly --dry-run --webroot -w {webroot_path} -d {domain}", shell=True)
         is_ok = input("Did the dry-run complete succesfully? [y/N]: ").lower() or 'n'
         if is_ok == 'n':
@@ -165,12 +170,12 @@ def get_ssl(config, variables):
     
     is_ok = input(f"Is {cert_path} the correct certificate path [Y/n]: ").lower() or 'y'
     if is_ok == 'n':
-        cert_path = input("Please input the template for your certificate path (it will update the config)")
+        cert_path = input("Please input the template for your certificate path (it will update the config): ")
         config_set("ssl_cert_path", cert_path)
 
     is_ok = input(f"Is {cert_path} the correct key path [Y/n]: ").lower() or 'y'
     if is_ok == 'n':
-        key_path = input("Please input the template for your key path (it will update the config)")
+        key_path = input("Please input the template for your key path (it will update the config): ")
         config_set("ssl_cert_key_path", key_path)
 
     config =  config.replace("#%", "")
