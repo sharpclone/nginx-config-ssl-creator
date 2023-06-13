@@ -90,7 +90,7 @@ def modify_variables(config_string : str):
                 exit()
             acme_config = acme_config.replace("@acme", acme_path)
             final_cfg = final_cfg.replace("@acme", acme_config)
-            variable_dict[var] = acme_config
+            variable_dict[var] = acme_config 
 
         #Other simple variables
         else:
@@ -125,14 +125,8 @@ def choose_template(folder):
         
     return templates[choice]
 
-
-def restart_nginx():
-    su = config_get("root_method")
-    nginx_cmd = config_get("nginx_restart_cmd")
-    subprocess.run([su, nginx_cmd])
-
-
 def get_ssl(config, variables):
+    su = config_get("root_method")
     ssl_method = config_get("ssl_method")
     has_installed_ssl_method = config_get("has_installed_ssl_method")
     if not has_installed_ssl_method:
@@ -142,9 +136,49 @@ def get_ssl(config, variables):
         else:
             print(f"You should install {ssl_method} and then run this script again")
             exit()
+
+
     print("Note that you should use a SSL template ")
 
+
+    write_to_root_file(config, variables["config_path"])
+    restart_nginx()
+
+
+    domain = variables["domain"]
+
+    if ssl_method == 'certbot':
+        webroot_path = input("Please enter the webroot path for certbot")
+        subprocess.run(f"{su} certbot certonly --dry-run --webroot -w {webroot_path} -d {domain}", shell=True)
+        is_ok = input("Did the dry-run complete succesfully? [y/N]: ").lower() or 'n'
+        if is_ok == 'n':
+            print("Check your configuration and try again")
+            exit()
+        else:
+            subprocess.run(f"{su} certbot certonly  --webroot -w {webroot_path} -d {domain}", shell=True)
+
+    if ssl_method == 'openbsd_acme':
+        subprocess.run(f"{su} acme-client -v {domain}", shell=True)
+
+    cert_path = config_get("ssl_cert_path")
+    key_path = config_get("ssl_cert_key_path")
     
+    is_ok = input(f"Is {cert_path} the correct certificate path [Y/n]: ").lower() or 'y'
+    if is_ok == 'n':
+        cert_path = input("Please input the template for your certificate path (it will update the config)")
+        config_set("ssl_cert_path", cert_path)
+
+    is_ok = input(f"Is {cert_path} the correct key path [Y/n]: ").lower() or 'y'
+    if is_ok == 'n':
+        key_path = input("Please input the template for your key path (it will update the config)")
+        config_set("ssl_cert_key_path", key_path)
+
+    config = config.replace("#%", "")
+    config =  config.replace("listen 80;", "listen 443 ssl http2;")
+    config =  certificates =  f"ssl_certificate {cert_path};\nssl_certificate_key {key_path};\n"
+    config =  config.replace("@ssl", certificates)
+    write_to_root_file(config, variables["config_path"])
+    restart_nginx()
 
 
 if __name__ == "__main__":
@@ -156,6 +190,7 @@ if __name__ == "__main__":
     # config_string = conf.read()
     mod_cfg,variables = modify_variables(template)
     conf_path = config_get("nginx_conf_path") + variables["domain"] + ".conf"
+    variables["config_path"] = conf_path
 
     #Asking if user wants ssl
     want_ssl = input("Do you want to get the ssl-cert automatically? [y/N]: ") or 'n'
