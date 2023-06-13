@@ -71,7 +71,7 @@ def modify_variables(config_string : str):
             table = ""
             useDef = input(f"Do you want to use {config_get('allow_table')} for the allowed IPs that are allowed to access the location? [Y/n] " ).lower() or 'y'
             if useDef == 'n':
-                val = input(f"Give the allowed CIDR noted IPs (separated by comma) that are allowed to access the location :")
+                val = input(f"Give the allowed CIDR noted IPs (separated by comma) that are allowed to access the location :").strip()
                 val = val.split(",")
                 for ip in val:
                     table += f"\tallow {ip};\n"
@@ -91,7 +91,7 @@ def modify_variables(config_string : str):
             acme_root = config_get("acme_root")
             is_ok = input(f"Is {acme_root} the correct path for the acme root ? [Y/n]: ").lower() or 'y'
             if is_ok == 'n':
-                acme_root = input("Input the correct path for the acme root (it will change the config): ")
+                acme_root = input("Input the correct path for the acme root (it will change the config): ").strip()
                 config_set("acme_root", acme_root)
             acme_challenge = acme_challenge.replace("@acme_root", acme_root)
             final_cfg = final_cfg.replace("@acme_challenge", acme_challenge)
@@ -99,7 +99,7 @@ def modify_variables(config_string : str):
 
         #Other simple variables
         elif var not in special_vars:
-            val = input(f"Give the value of {var}: ")
+            val = input(f"Give the value of {var}: ").strip()
             variable_dict[var] = val
             final_cfg = final_cfg.replace(f"@{var}", val)
     return final_cfg,variable_dict
@@ -134,10 +134,10 @@ def get_ssl(config, variables):
     su = config_get("root_method")
     ssl_method = config_get("ssl_method")
     has_installed_ssl_method = config_get("has_installed_ssl_method")
-    if not has_installed_ssl_method:
+    if has_installed_ssl_method == "0":
         has_installed_ssl_method = input(f"Have you installed {ssl_method}? [y/N]: ").lower() or 'n'
         if has_installed_ssl_method == 'y':
-            config_set("has_installed_ssl_method", 1)
+            config_set("has_installed_ssl_method", '1')
         else:
             print(f"You should install {ssl_method} and then run this script again")
             exit()
@@ -153,7 +153,7 @@ def get_ssl(config, variables):
     domain = variables["domain"]
 
     if ssl_method == 'certbot':
-        webroot_path = input("Please enter the webroot path for certbot: ")
+        webroot_path = input("Please enter the webroot path for certbot: ").strip()
         subprocess.run(f"{su} certbot certonly --dry-run --webroot -w {webroot_path} -d {domain}", shell=True)
         is_ok = input("Did the dry-run complete succesfully? [y/N]: ").lower() or 'n'
         if is_ok == 'n':
@@ -170,21 +170,21 @@ def get_ssl(config, variables):
     
     is_ok = input(f"Is {cert_path} the correct certificate path [Y/n]: ").lower() or 'y'
     if is_ok == 'n':
-        cert_path = input("Please input the template for your certificate path (it will update the config): ")
+        cert_path = input("Please input the template for your certificate path (it will update the config): ").strip()
         config_set("ssl_cert_path", cert_path)
 
     is_ok = input(f"Is {cert_path} the correct key path [Y/n]: ").lower() or 'y'
     if is_ok == 'n':
-        key_path = input("Please input the template for your key path (it will update the config): ")
+        key_path = input("Please input the template for your key path (it will update the config): ").strip()
         config_set("ssl_cert_key_path", key_path)
 
     config =  config.replace("#%", "")
     config =  config.replace("listen 80;", "listen 443 ssl http2;")
-    config =  certificates =  f"ssl_certificate {cert_path};\nssl_certificate_key {key_path};\n"
+    certificates =  f"ssl_certificate {cert_path};\nssl_certificate_key {key_path};\n"
     config =  config.replace("@ssl", certificates)
 
 
-    return301 = open("/etc/nginx_proxy_creator/return301.conf")\
+    return301 = open("/etc/nginx-proxy-creator/return301.conf")\
         .read()\
         .replace("@domain", domain)
     

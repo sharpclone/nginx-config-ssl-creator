@@ -25,4 +25,5 @@ def config_set(key, value):
     print(f)
 
 if __name__ == "__main__":
-    config_set("acme_root","/var/www/html/acme")
+    s = config_get("has_installed_ssl_method")
+    print(type(s))
