@@ -26,7 +26,6 @@ def config_set(key, value):
     write_to_root_file(tmpcfg, "/etc/nginx-proxy-creator/creator.conf")
 
 
-
 def write_to_root_file(content, file_path):
     # Create a temporary file to hold the content
     temp_file = '/tmp/tempfile.txt'
@@ -130,6 +129,7 @@ def choose_template(folder):
         
     return templates[choice]
 
+
 def get_ssl(config, variables):
     su = config_get("root_method")
     ssl_method = config_get("ssl_method")
@@ -168,12 +168,12 @@ def get_ssl(config, variables):
     cert_path = config_get("ssl_cert_path")
     key_path = config_get("ssl_cert_key_path")
     
-    is_ok = input(f"Is {cert_path} the correct certificate path [Y/n]: ").lower() or 'y'
+    is_ok = input(f"Is {cert_path} the correct certificate path? [Y/n]: ").lower() or 'y'
     if is_ok == 'n':
         cert_path = input("Please input the template for your certificate path (it will update the config): ").strip()
         config_set("ssl_cert_path", cert_path)
 
-    is_ok = input(f"Is {cert_path} the correct key path [Y/n]: ").lower() or 'y'
+    is_ok = input(f"Is {cert_path} the correct key path? [Y/n]: ").lower() or 'y'
     if is_ok == 'n':
         key_path = input("Please input the template for your key path (it will update the config): ").strip()
         config_set("ssl_cert_key_path", key_path)
