@@ -36,8 +36,8 @@ subprocess.run([su,'mkdir','-p',f'{prefix}templates'])
 
 entries = pathlib.Path(".")
 for entry in entries.iterdir():
-    print(entry)
     if not entry.is_dir() and entry.name != "README.md":
+        print(entry)
         write_to_root_file(open(entry).read(), f"{prefix}{entry.name}")
 
 

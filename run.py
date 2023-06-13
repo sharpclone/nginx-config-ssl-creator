@@ -4,6 +4,24 @@ from pathlib import Path
 import subprocess
 import os
 
+
+def config_get(key :str):
+    #Setting up the config file
+    settings = configparser.ConfigParser()
+    settings.read("/etc/nginx_proxy_creator/creator.conf")
+    cfg = settings["Settings"]
+    return cfg[key].strip("\"' ")
+
+
+def config_set(key, value):
+    config = ConfigParser()
+    config.read("/etc/nginx_proxy_creator/creator.conf")
+    parser = config['Settings']
+    parser[key] = value
+    with open('/etc/nginx_proxy_creator/creator.conf', 'w') as configfile:
+        config.write(configfile)
+
+
 def write_to_root_file(content, file_path):
     # Create a temporary file to hold the content
     temp_file = '/tmp/tempfile.txt'
@@ -22,18 +40,18 @@ def write_to_root_file(content, file_path):
     # Remove the temporary file
     subprocess.run([root_method, 'rm', temp_file])
 
+
 def find_variables(config_string : str):
     variables = re.findall(r'@([a-zA-Z_]\w+)(?!\w|\s*\()', config_string)
     unique_variables = sorted(set(variables))
     return unique_variables
 
 
-def config_get(key :str):
-    #Setting up the config file
-    settings = configparser.ConfigParser()
-    settings.read("/etc/nginx-proxy-creator/creator.conf")
-    cfg = settings["Settings"]
-    return cfg[key].strip("\"' ")
+def restart_nginx():
+    su = config_get("root_method")
+    nginx_cmd = config_get("nginx_restart_cmd")
+    subprocess.run(f"{su} {nginx_cmd}", shell=True)
+
 
 def modify_variables(config_string : str):
     final_cfg = config_string
@@ -58,6 +76,21 @@ def modify_variables(config_string : str):
                     table += f"\tallow {ip};\n"
             final_cfg = final_cfg.replace(f"@allow_table", table)
             variable_dict[var] = table
+        #SSL 
+        if var == "ssl":
+            pass
+
+        #acme
+        if var == "acme":
+            acme_config = open("/etc/nginx_proxy_creator/acme_challenge").read()
+            acme_path = config_get("acme_root")
+            is_ok = input(f"Is {acme_path} the correct path for the acme? [Y/n]").lower() or 'y'
+            if is_ok == 'n':
+                print("You can change the acme root from the config")
+                exit()
+            acme_config = acme_config.replace("@acme", acme_path)
+            final_cfg = final_cfg.replace("@acme", acme_config)
+            variable_dict[var] = acme_config
 
         #Other simple variables
         else:
@@ -65,6 +98,7 @@ def modify_variables(config_string : str):
             variable_dict[var] = val
             final_cfg = final_cfg.replace(f"@{var}", val)
     return final_cfg,variable_dict
+
 
 def choose_template(folder):
     #Listing AvailableTemplates
@@ -92,6 +126,26 @@ def choose_template(folder):
     return templates[choice]
 
 
+def restart_nginx():
+    su = config_get("root_method")
+    nginx_cmd = config_get("nginx_restart_cmd")
+    subprocess.run([su, nginx_cmd])
+
+
+def get_ssl(config, variables):
+    ssl_method = config_get("ssl_method")
+    has_installed_ssl_method = config_get("has_installed_ssl_method")
+    if not has_installed_ssl_method:
+        has_installed_ssl_method = input(f"Have you installed {ssl_method}? [y/N]: ").lower() or 'n'
+        if has_installed_ssl_method == 'y':
+            config_set("has_installed_ssl_method", 1)
+        else:
+            print(f"You should install {ssl_method} and then run this script again")
+            exit()
+    print("Note that you should use a SSL template ")
+
+    
+
 
 if __name__ == "__main__":
     #Selecting the template
@@ -103,19 +157,15 @@ if __name__ == "__main__":
     mod_cfg,variables = modify_variables(template)
     conf_path = config_get("nginx_conf_path") + variables["domain"] + ".conf"
 
-    #Getting the auto ssl
+    #Asking if user wants ssl
     want_ssl = input("Do you want to get the ssl-cert automatically? [y/N]: ") or 'n'
     if want_ssl.lower() != 'n':
-        ssl_method = config_get("ssl_method")
-        has_installed_ssl_method = input(f"Have you installed {ssl_method}? [y/N]: ") or 'n'
-        if has_installed_ssl_method.lower() == 'n':
-            print(f"You should install {ssl_method} and then run this script again")
-            exit()
-        else:
-            print("Note that you should use a SSL template (that have #@ comments)")
-            #Do the ssl -stuff here
-        
+        get_ssl(mod_cfg,variables)
+     
     else:
-        #Final result       
-        write_to_root_file(mod_cfg, conf_path)
-
+        print(mod_cfg)
+        want_to_write_config = input(f"\nDo you want to write this config to {conf_path}? [N/y]")  or 'n' 
+        if want_to_write_config != 'n':   
+            write_to_root_file(mod_cfg, conf_path)
+            restart_nginx()
+    print("Thanks for using my script")
