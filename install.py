@@ -30,7 +30,7 @@ settings = configparser.ConfigParser()
 settings.read("creator.conf")
 cfg = settings["Settings"]
 
-prefix="/etc/nginx-proxy-creator/"
+prefix="/etc/nginx-config-creator/"
 su = config_get("root_method")
 subprocess.run([su,'mkdir','-p',f'{prefix}templates'])
 
