@@ -8,27 +8,23 @@ import os
 def config_get(key :str):
     #Setting up the config file
     settings = configparser.ConfigParser()
-    settings.read("/etc/nginx-config-creator/creator.conf")
+    settings.read("config")
     cfg = settings["Settings"]
     return cfg[key].strip("\"' ")
 
 
 def config_set(key, value):
     config = configparser.ConfigParser()
-    config.read("/etc/nginx-config-creator/creator.conf")
+    config.read("config")
     parser = config['Settings']
     parser[key] = value
-
-    with open('/tmp/cfg.temp','w+') as cfg:
-        config.write(cfg)
-        cfg.close()
-    tmpcfg = open('/tmp/cfg.temp').read()
-    write_to_root_file(tmpcfg, "/etc/nginx-config-creator/creator.conf")
+    with open('config', 'w') as configfile:
+        config.write(configfile)
 
 
 def write_to_root_file(content, file_path):
     # Create a temporary file to hold the content
-    temp_file = '/tmp/tempfile.txt'
+    temp_file = '/tmp/tmp-nginx-compiled.txt'
     with open(temp_file, 'w') as f:
         f.write(content)
 
@@ -86,7 +82,7 @@ def modify_variables(config_string : str):
 
         #acme
         if var == "acme_challenge":
-            acme_challenge = open("/etc/nginx-config-creator/acme_challenge").read()
+            acme_challenge = open("acme_challenge").read()
             acme_root = config_get("acme_root")
             is_ok = input(f"Is {acme_root} the correct path for the acme root ? [Y/n]: ").lower() or 'y'
             if is_ok == 'n':
@@ -184,7 +180,7 @@ def get_ssl(config, variables):
     config =  config.replace("@ssl", certificates)
 
 
-    return301 = open("/etc/nginx-config-creator/return301.conf")\
+    return301 = open("return301.conf")\
         .read()\
         .replace("@domain", domain)
     
@@ -196,7 +192,7 @@ def get_ssl(config, variables):
 
 if __name__ == "__main__":
     #Selecting the template
-    template = choose_template(Path("/etc/nginx-config-creator/templates"))
+    template = choose_template(Path("templates"))
 
     #Open the template
     template = open(template,"r").read()
