@@ -208,7 +208,7 @@ if __name__ == "__main__":
      
     else:
         print(mod_cfg)
-        want_to_write_config = input(f"\nDo you want to write this config to {conf_path}? [N/y]")  or 'n' 
+        want_to_write_config = input(f"\nDo you want to write this config to {conf_path}? [N/y]: ")  or 'n' 
         if want_to_write_config != 'n':   
             write_to_root_file(mod_cfg, conf_path)
             restart_nginx()
