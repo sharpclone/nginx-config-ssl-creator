@@ -1,5 +1,6 @@
 # nginx-config-ssl-creator
-This can be one of the most useful scripts out there for those who manage tons of nginx sites/proxies.
+This can be one of the most useful scripts out there for those who manage tons of nginx sites/proxies. 
+Deploy Sites with nginx in less than 1 minute!
 
 **What it does?**
 1. Takes a template as input. A template has variables such as @domain, @web_host, @allow_table. The script then asks for the value of each of these variables and automatically compiles a config and deploys it.
@@ -21,3 +22,6 @@ All other other variables will be treated as simple variables which have just a 
 **Specific notes for SSL**
 1. The ssl template should **HAVE** #% @ssl ( it first deploys the unsecure version , then generates the certificates, then replaces #%  @ssl with the ssl certificate locations and then restarts nginx)
 2. If you are on OpenBSD you should also have @acme_challenge to make acme_client work.
+
+https://github.com/sharpclone/nginx-config-ssl-creator/assets/103455720/a2e926fc-a048-4787-8b02-957aebba5bae
+
