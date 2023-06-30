@@ -1,3 +1,7 @@
+# AUTHOR : Cazac Mihai
+# Website: mihaicazac.uk.to
+
+
 import re
 import configparser
 from pathlib import Path
